@@ -23,10 +23,10 @@ object SparkMotionActivity {
   def main(args: Array[String]): Unit = {
     LoggerLevels.setStreamingLogLevels()
     val conf=new SparkConf().setAppName("SparkMotionActivity")
-      .setMaster("local[4]")
+      .setMaster("spark://master:7077").setJars(List("/root/work/intellij/WordCount/target/WordCount-1.0-SNAPSHOT.jar"))
     val sc=new SparkContext(conf)
-    //val rdd=sc.sequenceFile("hdfs://master:9000/user/fshuai/img.seq",classOf[Text],classOf[BytesWritable])
-    val rdd=sc.sequenceFile("/root/input/image.seq",classOf[Text],classOf[BytesWritable])
+    val rdd=sc.sequenceFile("hdfs://master:9000/user/fshuai/img.seq",classOf[Text],classOf[BytesWritable])
+    //val rdd=sc.sequenceFile("/root/input/image.seq",classOf[Text],classOf[BytesWritable])
       //.map{case (x,y) => (x.toString,getHist(y).toString)}
     val rdd1=rdd.mapPartitions(it => {
       val optical=new OpticalFlowSeq
@@ -50,7 +50,7 @@ object SparkMotionActivity {
       }
       result.iterator
     })
-    rdd1.saveAsTextFile("/root/output/normactivityresult")
+    rdd1.saveAsTextFile("hdfs://master:9000/user/fshuai/out20")
     sc.stop()
   }
 
