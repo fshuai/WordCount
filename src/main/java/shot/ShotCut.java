@@ -1,6 +1,8 @@
 package shot;
 
 import hist.Hist;
+import org.apache.avro.TestAnnotation;
+import org.junit.Test;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -168,6 +170,21 @@ public class ShotCut {
         domainMean.value[2] = meanValueV;
         return domainMean;
     }
+
+    @Test
+    public void testMainColor(){
+        //correct
+        String in="75080 4019 763 1007 1512 4241 260032 16720 4828 " +
+                "10452 5703 4496 7446 26582 2873 2406 74507 3476 7899 9325 " +
+                "11870 24481 213749 67107 2973 2143 1466 1014 955 2185 1159 " +
+                "3851 73776 1142 494 2115 2526 7548 10651 270235 7041 5198 " +
+                "5065 10495 9173 11053 4168 7480";
+        HistData curHist=new HistData(in);
+        CvScalar res=extractDomainColor(curHist);
+        System.out.println(res.value[0]);
+
+    }
+
 
     //计算两个直方图差的绝对值之和
     public double calFrameHistDiff(HistData prevHist,HistData curHist){

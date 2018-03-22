@@ -6,6 +6,8 @@ import java.io.Serializable;
  * Created by root on 17-12-27.
  */
 public class HistData implements Serializable{
+    //add main color rate
+    public double rate=0.0;
     public static final int HISTBINS=16;
     public int[] h;
     public int[] s;
