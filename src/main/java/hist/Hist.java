@@ -52,10 +52,10 @@ public class Hist {
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 int c = pix[x + y * width];
-                int R = (c >> 16) & 0xFF;
-                int G = (c >> 8) & 0xFF;
-                int B = (c >> 0) & 0xFF;
-                float[] value= Color.RGBtoHSB(R,G,B,null);
+                int r = (c >> 16) & 0xFF;
+                int g = (c >> 8) & 0xFF;
+                int b = (c >> 0) & 0xFF;
+                float[] value= Color.RGBtoHSB(r,g,b,null);
                 Hsv hsv=new Hsv(value[0]*360,value[1]*255,value[2]*255);
                 result.add(hsv);
             }
@@ -72,6 +72,21 @@ public class Hist {
             result.v[(int)(re.get(i).v/15.93751)]++;
         }
         return result;
+    }
+
+    /**
+     * return histinfo , mainColorRate , width , height
+     * @return
+     */
+    public String getAllHistInfo(){
+        StringBuilder res=new StringBuilder();
+        HistData hist=getHist();
+        res.append(hist.toString());
+        double rate=HistUtils.calDomainColorRate(srcImg,hist);
+        res.append(rate);
+        res.append(srcImg.getWidth());
+        res.append(srcImg.getHeight());
+        return res.toString();
     }
 
     public CvScalar HSV2Scalar(ArrayList<Hsv> in){

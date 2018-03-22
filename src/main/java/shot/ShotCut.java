@@ -185,6 +185,20 @@ public class ShotCut {
 
     }
 
+    @Test
+    public void testMainColorRate() throws IOException {
+        //correct
+        String in="75080 4019 763 1007 1512 4241 260032 16720 4828 " +
+                "10452 5703 4496 7446 26582 2873 2406 74507 3476 7899 9325 " +
+                "11870 24481 213749 67107 2973 2143 1466 1014 955 2185 1159 " +
+                "3851 73776 1142 494 2115 2526 7548 10651 270235 7041 5198 " +
+                "5065 10495 9173 11053 4168 7480";
+        HistData curHist=new HistData(in);
+        BufferedImage img=ImageIO.read(new File("/root/Videos/frame00001.jpg"));
+        double res=calDomainColorRate(img,curHist);
+        System.out.println(res);
+    }
+
 
     //计算两个直方图差的绝对值之和
     public double calFrameHistDiff(HistData prevHist,HistData curHist){
@@ -205,7 +219,7 @@ public class ShotCut {
     //计算主色率
     public double calDomainColorRate(BufferedImage img, HistData curHist){
         CvScalar s = new CvScalar();
-        CvScalar cMeanColor = new CvScalar();
+        CvScalar cMeanColor ;
         double distance = 0;
         double dSinHmean = 0;
         double dCosHmean = 0;
