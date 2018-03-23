@@ -8,6 +8,8 @@ import java.io.Serializable;
 public class HistData implements Serializable{
     //add main color rate
     public double rate=0.0;
+    public int width;
+    public int height;
     public static final int HISTBINS=16;
     public int[] h;
     public int[] s;

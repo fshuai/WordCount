@@ -62,6 +62,7 @@ public class Hist {
         }
         return result;
     }
+
     public HistData getHist(){
         HistData result=new HistData();
         ArrayList<Hsv> re=RGB2HSV();
@@ -84,7 +85,9 @@ public class Hist {
         res.append(hist.toString());
         double rate=HistUtils.calDomainColorRate(srcImg,hist);
         res.append(rate);
+        res.append(" ");
         res.append(srcImg.getWidth());
+        res.append(" ");
         res.append(srcImg.getHeight());
         return res.toString();
     }
