@@ -1,7 +1,6 @@
 package shot;
 
-import hist.Hist;
-import org.apache.avro.TestAnnotation;
+import hist.HistUtils;
 import org.junit.Test;
 
 import javax.imageio.ImageIO;
@@ -14,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by root on 18-3-9.
+ * Created by root on 18-3-27.
  */
 public class ShotCut {
     private int width;
@@ -194,14 +193,14 @@ public class ShotCut {
                 "3851 73776 1142 494 2115 2526 7548 10651 270235 7041 5198 " +
                 "5065 10495 9173 11053 4168 7480";
         HistData curHist=new HistData(in);
-        BufferedImage img=ImageIO.read(new File("/root/Videos/frame00001.jpg"));
+        BufferedImage img= ImageIO.read(new File("/root/Videos/frame00001.jpg"));
         double res=calDomainColorRate(img,curHist);
         System.out.println(res);
     }
 
 
     //计算两个直方图差的绝对值之和
-    public double calFrameHistDiff(HistData prevHist,HistData curHist){
+    public double calFrameHistDiff(HistAllInfo prevHist,HistAllInfo curHist){
         double frameDiff=0.0;
         for(int i=0;i<HISTBINS;i++){
             frameDiff+=Math.abs(prevHist.h[i]-curHist.h[i]);
@@ -212,7 +211,7 @@ public class ShotCut {
         for(int i=0;i<HISTBINS;i++){
             frameDiff+=Math.abs(prevHist.v[i]-curHist.v[i]);
         }
-        return frameDiff/(width*height);
+        return frameDiff/(prevHist.width*prevHist.height);
         //return frameDiff;
     }
 
@@ -255,7 +254,7 @@ public class ShotCut {
                         + (s.value[1] * dSinHxy - cMeanColor.value[1] * dSinHmean) * (s.value[1] * dSinHxy - cMeanColor.value[1] * dSinHmean));
 
                 //85 经验阈值
-                if( distance < 90 ){
+                if(distance<90){
                     nCount++;
                 }
             }
@@ -284,7 +283,7 @@ public class ShotCut {
         if(distance<25){
             double dRate1 = calDomainColorRate(img1, hist1);
             double dRate2 = calDomainColorRate(img2, hist2);
-            dRateDiff =Math.abs( dRate1 - dRate2 );
+            dRateDiff =Math.abs(dRate1-dRate2);
         }
         else{
             dRateDiff = 0.5;
@@ -292,32 +291,22 @@ public class ShotCut {
         return dRateDiff;
     }
 
-    private String iToString(int i){
-        if(i>=0 && i<=9){
-            return "000"+i;
-        }else if(i>=10 && i<=99){
-            return "00"+i;
-        }else if(i>=100 && i<=999){
-            return "0"+i;
-        }else return "err";
-    }
-
     public int shotDetection(List<String> inputs) throws IOException {
         //h_bins代表h分量
         int h_bins = HISTBINS, s_bins = HISTBINS, v_bins = HISTBINS;
-        BufferedImage img=null;
         //TODO
         //创建三维直方图
-        BufferedImage preImg=null;
-        BufferedImage pGTImg=null;
+//        BufferedImage preImg=null;
+//        BufferedImage pGTImg=null;
+//        BufferedImage img=null;
 
         ArrayList<HistData> arrHist;
-        //上一帧直方图数据
-        HistData preHistData=new HistData();
+        //上一帧直方图数
+        HistAllInfo preHistData=new HistAllInfo(inputs.get(0));
         //当前帧直方图数据
-        HistData curHistData;
+        HistAllInfo curHistData;
         //渐变起始帧直方图数据
-        HistData histGTStart=new HistData();
+        HistAllInfo histGTStart=new HistAllInfo();
         //保存滑动窗口的帧间差
         double[] slideWinDiff=new double[SLIDEWINDOWNUMBER];  //30
         //渐变检测过程中保存的帧间差
@@ -353,8 +342,6 @@ public class ShotCut {
         double dThresholdLow2	= 0.0;
 
         for(int i=0; i <=inputs.size(); i++){
-            filepath=iToString(i)+".jpg";
-            img= ImageIO.read(new File(path+filepath));
             if(i == 0){
                 //初始化前一帧和渐变图像
 //                width=img.getWidth();
@@ -366,22 +353,22 @@ public class ShotCut {
                 //Hist curhist=new Hist(img,iToString(i));
                 //curHistData=curhist.getHist();
                 //preHistData=curHistData;
-                curHistData=new HistData(inputs.get(0));
-                preHistData=new HistData(inputs.get(0));
+                curHistData=new HistAllInfo(inputs.get(0));
+                preHistData=new HistAllInfo(inputs.get(0));
             }
             else{
                 //计算帧间差
                 //Hist curhist=new Hist(img,iToString(i));
-                curHistData=new HistData(inputs.get(i));
-                double curDiff = calFrameHistDiff( preHistData, curHistData);
+                curHistData=new HistAllInfo(inputs.get(i));
+                double curDiff = calFrameHistDiff(preHistData, curHistData);
 
                 ////保存帧间差
                 //fresult<<i<<","<<curDiff<<","<<dThresholdHigh1<<","<<dThresholdLow1<<endl;
 
                 //滑动窗口未填充足够，即两个镜头不会离得太近
-                if( nSlideWindow < 16 ){
+                if(nSlideWindow < 16){
                     if(nSlideWindow==0 && !isNewCut){
-                        if( curDiff < dbLastDiff/3 ){
+                        if(curDiff < dbLastDiff/3){
                             //memmove(&vecSlideWinDiff[1],&vecSlideWinDiff[0],sizeof(vecSlideWinDiff)-sizeof(vecSlideWinDiff[0]));
                             for(int j=SLIDEWINDOWNUMBER;j>1;j--){
                                 slideWinDiff[j-1]=slideWinDiff[j-2];
@@ -415,16 +402,15 @@ public class ShotCut {
 
                 //判断候选切变是否为切变，如果不是切变，则认为是候选渐变
                 if(isCandidateCut && isSlideEnough){
-                    if( curDiff < dThresholdLow2 * 2 ){
+                    if(curDiff<dThresholdLow2 * 2){
                         //帧差小于低阈值 认为候选切变是切变
                         slideWinDiff[0] = curDiff;
                         nSlideWindow = 1;
-                        cutInfo.add( i-1 );
-
+                        cutInfo.add(i-1);
                         isNewCut = false;
                     }
-                    else
-                    {//帧差大于低阈值 认为是候选渐变
+                    else {
+                        //帧差大于低阈值 认为是候选渐变
                         isGT = true;
                         nGTType = 0;
                         nDiffCount = 1;
@@ -443,15 +429,12 @@ public class ShotCut {
                         mean = curDiff;
                         stddev = 0;
                     }
-                    else
-                    {
-                        for(int nsize = 0; nsize < nSlideWindow; nsize++ )
-                        {
+                    else {
+                        for(int nsize = 0; nsize < nSlideWindow; nsize++ ){
                             sum += slideWinDiff[nsize];
                         }
                         mean = sum/nSlideWindow;
-                        for(int nsize = 0; nsize < nSlideWindow; nsize++ )
-                        {
+                        for(int nsize = 0; nsize < nSlideWindow;nsize++){
                             variance += (slideWinDiff[nsize] - mean)*(slideWinDiff[nsize] - mean);
                         }
                         stddev = Math.sqrt( variance/nSlideWindow );
@@ -467,9 +450,14 @@ public class ShotCut {
 
                     //当前帧差大于最小低阈值
                     if(curDiff > dThresholdLow2){
-                        if( calDomainColorRate(img, curHistData)<=DOMINATCOLORTHRESHOLD1){
+                        //if( calDomainColorRate(img, curHistData)<=DOMINATCOLORTHRESHOLD1){
+                        if(curHistData.rate<=DOMINATCOLORTHRESHOLD1){
                             //不包含足球场地
-                            double dDomColorDiff =  calDomainColorDiff(img, curHistData, preImg, preHistData);
+                            //double dDomColorDiff =  calDomainColorDiff(img, curHistData, preImg, preHistData);
+                            HistData tmpCurHistData=HistUtils.convertHistAllInfo2Data(curHistData);
+                            HistData tmpPreHistData=HistUtils.convertHistAllInfo2Data(preHistData);
+                            double dDomColorDiff= HistUtils.calDomainColorDiff
+                                    (curHistData.rate,tmpCurHistData,preHistData.rate,tmpCurHistData);
 
                             if((curDiff > dThresholdHigh1 * 2 && dDomColorDiff > DOMINATCOLORTHRESHOLD3) || (curDiff > dThresholdHigh1 * 3))
                             //加入dDomColorDiff > 0.3切变准确率高，渐变检测结果少些
@@ -488,8 +476,8 @@ public class ShotCut {
                                 //CopyHistData( histGTStart, prevHistData );
                                 histGTStart=preHistData;
                                 //cvCopyImage(prevImage, pGTImage);
-                                pGTImg=new BufferedImage(preImg.getWidth(),preImg.getHeight(),preImg.getType());
-                                pGTImg.setData(preImg.getData());
+//pGTImg=new BufferedImage(preImg.getWidth(),preImg.getHeight(),preImg.getType());
+//pGTImg.setData(preImg.getData());
                                 GTDiff[GTWINDOWNUMBER-1] = curDiff;
                                 nGTStartNum = i;
                             }
@@ -503,8 +491,8 @@ public class ShotCut {
                                 //CopyHistData( histGTStart, prevHistData );
                                 histGTStart=preHistData;
                                 //cvCopyImage(prevImage, pGTImage);
-                                pGTImg=new BufferedImage(preImg.getWidth(),preImg.getHeight(),preImg.getType());
-                                pGTImg.setData(preImg.getData());
+//pGTImg=new BufferedImage(preImg.getWidth(),preImg.getHeight(),preImg.getType());
+//pGTImg.setData(preImg.getData());
                                 GTDiff[GTWINDOWNUMBER-1] = curDiff;
                                 nGTStartNum = i;
                             }
@@ -521,7 +509,11 @@ public class ShotCut {
                             }
                         }
                         else{//包含足球场地
-                            double dDomColorDiff = calDomainColorDiff(img, curHistData, preImg, preHistData);
+                            //double dDomColorDiff = calDomainColorDiff(img, curHistData, preImg, preHistData);
+                            HistData tmpCurHistData=HistUtils.convertHistAllInfo2Data(curHistData);
+                            HistData tmpPreHistData=HistUtils.convertHistAllInfo2Data(preHistData);
+                            double dDomColorDiff=HistUtils.calDomainColorDiff
+                                    (curHistData.rate,tmpCurHistData,preHistData.rate,tmpPreHistData);
                             if( (curDiff > dThresholdHigh2 * 2 && dDomColorDiff > DOMINATCOLORTHRESHOLD3) || (curDiff > dThresholdHigh2 * 3)){
                                 //**//**//**//*|| dDomColorDiff > 0.3*//**//**//**//* )//加入dDomColorDiff > 0.3切变准确率高，渐变检测结果少些
                                 //发生突变
@@ -537,8 +529,8 @@ public class ShotCut {
                                 //CopyHistData( histGTStart, prevHistData );
                                 histGTStart=preHistData;
                                 //cvCopyImage(prevImage, pGTImage);
-                                pGTImg=new BufferedImage(preImg.getWidth(),preImg.getHeight(),preImg.getType());
-                                pGTImg.setData(preImg.getData());
+//pGTImg=new BufferedImage(preImg.getWidth(),preImg.getHeight(),preImg.getType());
+//pGTImg.setData(preImg.getData());
                                 GTDiff[GTWINDOWNUMBER-1] = curDiff;
                                 nGTStartNum = i;
                             }
@@ -549,26 +541,26 @@ public class ShotCut {
                                 nGTType = 1;
                                 nDiffCount++;
                                 //保存渐变起始帧直方图和起始相隔帧差
-                                //CopyHistData( histGTStart, prevHistData );
+                                //CopyHistData(histGTStart,prevHistData);
                                 histGTStart=preHistData;
                                 //cvCopyImage(prevImage, pGTImage);
-                                pGTImg=new BufferedImage(preImg.getWidth(),preImg.getHeight(),preImg.getType());
-                                pGTImg.setData(preImg.getData());
+//pGTImg=new BufferedImage(preImg.getWidth(),preImg.getHeight(),preImg.getType());
+//pGTImg.setData(preImg.getData());
                                 GTDiff[GTWINDOWNUMBER-1] = curDiff;
                                 nGTStartNum = i;
                             }
-                            else
-                            {//不是镜头边界，继续增大滑动窗口
+                            else{
+                                //不是镜头边界，继续增大滑动窗口
                                 //保存滑动窗口帧间差
                                 //memmove( &vecSlideWinDiff[1], &vecSlideWinDiff[0], sizeof(vecSlideWinDiff) - sizeof(vecSlideWinDiff[0]) );
                                 for(int j=SLIDEWINDOWNUMBER;j>1;j--){
                                     slideWinDiff[j-1]=slideWinDiff[j-2];
                                 }
                                 slideWinDiff[0] = curDiff;
-                                if( nSlideWindow < SLIDEWINDOWNUMBER )
+                                if(nSlideWindow < SLIDEWINDOWNUMBER)
                                     nSlideWindow++;
                             }
-                        } //else
+                        } //else including soccer fields
                     }
                     else{
                         //如果不是渐变检测状态则帧间差存入滑动窗口,如果是渐变在渐变检测中处理
@@ -637,7 +629,12 @@ public class ShotCut {
                     }
                     else{
                         //相隔帧超过阈值
-                        double dBeforeDomColorDiff =  calDomainColorDiff(img,curHistData, pGTImg, histGTStart);
+                        //double dBeforeDomColorDiff =  calDomainColorDiff(img,curHistData, pGTImg, histGTStart);
+                        HistData tmpcurHistData=HistUtils.convertHistAllInfo2Data(curHistData);
+                        HistData tmpHistGtStart=HistUtils.convertHistAllInfo2Data(histGTStart);
+                        double dBeforeDomColorDiff=HistUtils.calDomainColorDiff
+                                (curHistData.rate,tmpcurHistData,histGTStart.rate,tmpHistGtStart);
+
                         if(calFrameHistDiff(histGTStart, curHistData) > (nGTType==0 ? dThresholdHigh1 : dThresholdHigh2) &&
                                 dBeforeDomColorDiff > DOMINATCOLORTHRESHOLD2 &&
                                 nDiffCount > 3 ){
@@ -695,8 +692,8 @@ public class ShotCut {
                 preHistData=curHistData;
             }
             //cvCopyImage(pImage, prevImage);
-            preImg=new BufferedImage(img.getWidth(),img.getHeight(),img.getType());
-            preImg.setData(img.getData());
+//preImg=new BufferedImage(img.getWidth(),img.getHeight(),img.getType());
+//preImg.setData(img.getData());
         }
         //最后一帧算是镜头结尾
         cutInfo.add(frameCount-1);

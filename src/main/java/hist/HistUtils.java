@@ -1,6 +1,8 @@
 package hist;
 
+import org.junit.Test;
 import shot.CvScalar;
+import shot.HistAllInfo;
 import shot.HistData;
 
 import java.awt.image.BufferedImage;
@@ -185,7 +187,7 @@ public class HistUtils {
     }
 
     //计算主色率的差异
-    public double calDomainColorDiff(double dRate1,HistData hist1,double dRate2,HistData hist2){
+    public static double calDomainColorDiff(double dRate1,HistData hist1,double dRate2,HistData hist2){
         double dRateDiff=0.0;
         CvScalar cMeanColor1 = extractDoMainColor(hist1);
         CvScalar cMeanColor2 = extractDoMainColor(hist2);
@@ -209,5 +211,31 @@ public class HistUtils {
         }
         return dRateDiff;
     }
+
+    public static HistData convertHistAllInfo2Data(HistAllInfo histAllInfo){
+        HistData res=null;
+        String in=histAllInfo.toString();
+        String[] fields=in.split(" ");
+        StringBuffer sb=new StringBuffer();
+        for(int i=0;i<48;i++){
+            sb.append(fields[i]);
+            sb.append(" ");
+        }
+        res=new HistData(sb.toString());
+        return res;
+    }
+
+    @Test
+    public void testConvert(){
+        String in="75080 4019 763 1007 1512 4241 260032 16720 4828 10452 5703 4496 7446 26582 2873 " +
+                "2406 74507 3476 7899 9325 11870 24481 213749 67107 2973 2143 1466 1014 955 2185 1159 " +
+                "3851 73776 1142 494 2115 2526 7548 10651 270235 7041 5198 5065 10495 9173 11053 4168 " +
+                "7480 0.6590526905829597 960 446";
+        HistAllInfo a=new HistAllInfo(in);
+        HistData res=convertHistAllInfo2Data(a);
+        System.out.println(res.toString());
+
+    }
+
 
 }
