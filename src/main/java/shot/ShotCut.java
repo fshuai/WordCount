@@ -2,6 +2,7 @@ package shot;
 
 import hist.HistUtils;
 import org.junit.Test;
+import scala.Int;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -291,7 +292,7 @@ public class ShotCut {
         return dRateDiff;
     }
 
-    public int shotDetection(List<String> inputs) throws IOException {
+    public List<Integer> shotDetection(List<String> inputs) throws IOException {
         //h_bins代表h分量
         int h_bins = HISTBINS, s_bins = HISTBINS, v_bins = HISTBINS;
         //TODO
@@ -299,6 +300,7 @@ public class ShotCut {
 //        BufferedImage preImg=null;
 //        BufferedImage pGTImg=null;
 //        BufferedImage img=null;
+        List<Integer> result=new ArrayList<Integer>();
 
         ArrayList<HistData> arrHist;
         //上一帧直方图数
@@ -341,7 +343,7 @@ public class ShotCut {
         double dThresholdHigh2	= 0.0;
         double dThresholdLow2	= 0.0;
 
-        for(int i=0; i <=inputs.size(); i++){
+        for(int i=0; i <inputs.size(); i++){
             if(i == 0){
                 //初始化前一帧和渐变图像
 //                width=img.getWidth();
@@ -407,6 +409,7 @@ public class ShotCut {
                         slideWinDiff[0] = curDiff;
                         nSlideWindow = 1;
                         cutInfo.add(i-1);
+                        result.add(i-1);
                         isNewCut = false;
                     }
                     else {
@@ -466,6 +469,7 @@ public class ShotCut {
                                 nSlideWindow = 0;
                                 //记录突变
                                 cutInfo.add(i);
+                                result.add(i);
                                 isNewCut = false;
                             }
                             else if( (curDiff > dThresholdHigh1 && dDomColorDiff > DOMINATCOLORTHRESHOLD3) || (curDiff > dThresholdHigh1 * 2) )
@@ -520,6 +524,7 @@ public class ShotCut {
                                 nSlideWindow = 0;
                                 //记录突变
                                 cutInfo.add(i);
+                                result.add(i);
                                 isNewCut = false;
                             }
                             else if((curDiff > dThresholdHigh2 && dDomColorDiff>DOMINATCOLORTHRESHOLD3)||(curDiff > dThresholdHigh2 * 2) ){
@@ -591,6 +596,7 @@ public class ShotCut {
                             nSlideWindow = 0;
                             //记录突变
                             cutInfo.add(i);
+                            result.add(i);
                             isNewCut=false;
                         }
                         else if( curDiff >(nGTType==0?dThresholdLow1:dThresholdLow2)){
@@ -620,6 +626,7 @@ public class ShotCut {
                                         nSlideWindow = GTWINDOWNUMBER-k-1;
                                         //记录突变
                                         cutInfo.add(nGTStartNum+k-1);
+                                        result.add(nGTStartNum+k-1);
                                         isNewCut=false;
                                         break;
                                     }
@@ -679,6 +686,7 @@ public class ShotCut {
                                     nSlideWindow = GTWINDOWNUMBER-k;
                                     //记录突变
                                     cutInfo.add(i-nSlideWindow-1);
+                                    result.add(i-nSlideWindow-1);
                                     isNewCut = false;
                                     break;
                                 }
@@ -697,7 +705,8 @@ public class ShotCut {
         }
         //最后一帧算是镜头结尾
         cutInfo.add(frameCount-1);
-        return 1;
+        result.add(inputs.size()-1);
+        return result;
     }
 
     public ArrayList<Integer> getCutInfo(){
