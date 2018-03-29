@@ -14,7 +14,6 @@ object SparkShotDetection {
     val sc=new SparkContext(conf)
     //directory of input json
 
-    //preserve the partitions
     val rdd=sc.textFile("/root/output/histinfo/").map(line=>{
       val fields=line.split(",")
       val key=fields(0).substring(1)
