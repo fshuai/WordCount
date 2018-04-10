@@ -49,6 +49,7 @@ object SparkOneShot {
     )
     //val detectNum=res.map(x=>(x,0))
     res.saveAsTextFile("/root/output/oneshot")
+    sc.stop()
   }
 
 }

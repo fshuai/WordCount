@@ -1,9 +1,7 @@
 package decode;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import hist.Hist;
 import kafka.consumer.Consumer;
 import kafka.consumer.ConsumerConfig;
 import kafka.consumer.ConsumerIterator;
@@ -23,12 +21,12 @@ public class FrameGsonConsumer {
 
     public static void main(String[] args){
         Properties props=new Properties();
-        props.put("group.id","test3");
+        props.put("group.id","test1");
         props.put("zookeeper.session.timeout.ms", "4000");
         props.put("zookeeper.sync.time.ms", "200");
         props.put("auto.commit.interval.ms", "1000");
         props.put("zookeeper.connect","master:2181");
-        String topic="frames";
+        String topic="frame44";
         ConsumerConnector consumer= Consumer.createJavaConsumerConnector(new ConsumerConfig(props));
 
         new GsonFrameConsumer(consumer,topic).start();
@@ -61,10 +59,7 @@ class GsonFrameConsumer extends Thread{
             MessageAndMetadata<byte[],byte[]> current=it.next();
             String k=new String(current.key());
             jsonobj=parser.parse(new String(current.message())).getAsJsonObject();
-            //todo
-            //convert byte to mat
-            System.out.println("offset:"+current.offset()+
-                    "key:"+k+"message:"+jsonobj.get("rows").getAsInt());
+            System.out.println("offset:"+current.offset()+"key:"+k+"frameId:"+jsonobj.get("videoId")+"message:"+jsonobj.get("data"));
         }
 
     }

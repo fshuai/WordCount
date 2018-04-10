@@ -1,8 +1,6 @@
 package streaming
 
-import hist.Hist
 import kafka.serializer.StringDecoder
-import org.apache.commons.codec.binary.Base64
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 import org.apache.spark.streaming.kafka.KafkaUtils
@@ -14,12 +12,6 @@ import scalautils.LoggerLevels
   * Created by root on 18-3-28.
   */
 object StreamingShotDetection {
-
-  def getHist(bytesWritable: Array[Byte]):String={
-    val h=new Hist(bytesWritable)
-    h.getAllHistInfo
-  }
-
 
   def main(args: Array[String]): Unit = {
     LoggerLevels.setStreamingLogLevels()
@@ -43,7 +35,9 @@ object StreamingShotDetection {
     val kafkaParams=Map[String,String]("metadata.broker.list"->brokers)
     val messages=KafkaUtils.createDirectStream[String,String,StringDecoder,StringDecoder](ssc,kafkaParams,topicSet)
     //get each frame hist
-    val histedDstream=messages.map(x=>(x._1,getHist(Base64.decodeBase64(x._2))))
+    //val histedDstream=messages.map(x=>(x._1.toString,getHist(Base64.decodeBase64(x._2))))
+    val resultRdd=messages.reduceByKeyAndWindow({(x,y) => x+y},Seconds(10))
+
   }
 
 }

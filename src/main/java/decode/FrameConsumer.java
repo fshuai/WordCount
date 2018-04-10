@@ -1,14 +1,13 @@
 package decode;
 
-import hist.Hist;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import kafka.consumer.Consumer;
 import kafka.consumer.ConsumerConfig;
 import kafka.consumer.ConsumerIterator;
 import kafka.consumer.KafkaStream;
 import kafka.javaapi.consumer.ConsumerConnector;
 import kafka.message.MessageAndMetadata;
-import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.io.Text;
 
 import java.util.HashMap;
 import java.util.List;
@@ -27,7 +26,7 @@ public class FrameConsumer {
         props.put("zookeeper.sync.time.ms", "200");
         props.put("auto.commit.interval.ms", "1000");
         props.put("zookeeper.connect","master:2181");
-        String topic="frames1228";
+        String topic="test1229";
         ConsumerConnector consumer= Consumer.createJavaConsumerConnector(new ConsumerConfig(props));
 
         new ConsumerThread(consumer,topic).start();
@@ -37,10 +36,14 @@ public class FrameConsumer {
 class ConsumerThread extends Thread{
     private ConsumerConnector consumer;
     private String topic;
+    private JsonParser parser;
+
+    private JsonObject jsonobj;
 
     public ConsumerThread(ConsumerConnector consumer,String topic){
         this.consumer=consumer;
         this.topic=topic;
+        parser=new JsonParser();
     }
 
     @Override
@@ -54,9 +57,8 @@ class ConsumerThread extends Thread{
         while(it.hasNext()){
             MessageAndMetadata<byte[],byte[]> current=it.next();
             String k=new String(current.key());
-            Hist h=new Hist(current.message());
-            System.out.println("offset:"+current.offset()+
-                    "key:"+k+"hist:"+h.getHist());
+            jsonobj=parser.parse(new String(current.message())).getAsJsonObject();
+            System.out.println("offset:"+current.offset()+"key:"+k+"frameid:"+jsonobj.get("videoId")+"message:"+jsonobj.get("data"));
         }
 
     }

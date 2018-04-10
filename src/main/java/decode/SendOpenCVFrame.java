@@ -3,8 +3,10 @@ package decode;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.highgui.Highgui;
@@ -47,6 +49,9 @@ public class SendOpenCVFrame {
         props.put("metadata.broker.list","master:9092,slave01:9092");
         props.put("key.serializer","org.apache.kafka.common.serialization.StringSerializer");
         props.put("value.serializer","org.apache.kafka.common.serialization.StringSerializer");
+//        props.put("batch.size","20971520");
+//        props.put("linger.ms","5");
+//        props.put("max.request.size","2097152");
         KafkaProducer<String,String> producer=new KafkaProducer<String, String>(props);
         String topic="frames";
         new SendOpencvKafkaThread(producer,topic,path).start();
@@ -65,7 +70,7 @@ class SendOpencvKafkaThread extends Thread{
     String topic="";
     File file=null;
     String[] files=null;
-    Base64 base64=null;
+    //Base64 base64=null;
     Mat input_mat=new Mat();
 
     public SendOpencvKafkaThread(KafkaProducer<String,String> producer,String topic,String path){
@@ -73,7 +78,7 @@ class SendOpencvKafkaThread extends Thread{
         this.producer=producer;
         this.path=path;
         this.topic=topic;
-        base64=new Base64();
+        //base64=new Base64();
         file=new File(path);
         files=file.list();
         Arrays.sort(files);  //sort the frames
@@ -95,7 +100,8 @@ class SendOpencvKafkaThread extends Thread{
                 obj.addProperty("cols",cols);
                 obj.addProperty("type",type);
                 //obj.addProperty("data", Base64.getEncoder().encodeToString(data));
-                obj.addProperty("data",base64.getEncodedLength(data));
+                obj.addProperty("data",Base64.encodeBase64String(data));
+                //System.out.println(Base64.encodeBase64String(data).getBytes().length);
                 String json=gson.toJson(obj);
                 ProducerRecord<String,String> record=new ProducerRecord<String, String>(topic,f,json);
                 producer.send(record);
@@ -112,4 +118,5 @@ class SendOpencvKafkaThread extends Thread{
         }
 
     }
+
 }
