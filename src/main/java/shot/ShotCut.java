@@ -301,6 +301,7 @@ public class ShotCut {
 //        BufferedImage pGTImg=null;
 //        BufferedImage img=null;
         List<Integer> result=new ArrayList<Integer>();
+        result.add(0);
 
         ArrayList<HistData> arrHist;
         //上一帧直方图数

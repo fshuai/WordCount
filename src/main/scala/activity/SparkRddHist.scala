@@ -15,11 +15,13 @@ object SparkRddHist {
   }
 
   def main(args: Array[String]): Unit = {
-    val conf=new SparkConf().setAppName("rddhist").setMaster("local[4]")
+    val conf=new SparkConf().setAppName("rddhist")
+      //.setMaster("local[4]")
     val sc=new SparkContext(conf)
-    val rdd=sc.sequenceFile("/root/input/image.seq",classOf[Text],classOf[BytesWritable])
+    val rdd=sc.sequenceFile(args(0),classOf[Text],classOf[BytesWritable])
     val res=rdd.map(x=>(x._1,getHist(x._2)))
-    res.saveAsTextFile("/root/output/histinfo")
+    res.saveAsTextFile(args(1))
+    sc.stop()
   }
 
 }

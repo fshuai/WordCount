@@ -12,12 +12,12 @@ object WordCount {
   def main(args: Array[String]): Unit = {
     LoggerLevels.setStreamingLogLevels()
     val conf=new SparkConf().setAppName("wordcount")
-      .setMaster("spark://master:7077").setJars(List("/root/../"))
+      //.setMaster("spark://master:7077").setJars(List("/root/../"))
     val sc=new SparkContext(conf)
-    val inpath="hdfs://master:9000/user/fshuai/input/words.txt"
-    val outpath="hdfs://master:9000/user/fshuai/output7"
-    sc.textFile(inpath).flatMap(_.split(" ")).map(x=>(ProcessString.processString(x),1)).
-      reduceByKey(_+_).sortBy(_._2,false).saveAsTextFile(outpath)
+    //val inpath="hdfs://master:9000/user/fshuai/input/words.txt"
+    //val outpath="hdfs://master:9000/user/fshuai/output7"
+    sc.textFile(args(0)).flatMap(_.split(" ")).map(x=>(ProcessString.processString(x),1)).
+      reduceByKey(_+_).sortBy(_._2,false).saveAsTextFile(args(1))
     sc.stop
   }
 }
