@@ -74,7 +74,7 @@ public class OpticalFlowSeq {
             }
         }
         if(y>0){
-            return sum/(y*max);
+            return sum/y; //sum/(y*max)
         }
         else return 1.0;
 

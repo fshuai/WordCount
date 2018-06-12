@@ -20,7 +20,7 @@ public class SimpleProducer {
         props.put("value.serializer","org.apache.kafka.common.serialization.StringSerializer");
         props.put("key.serializer.class","kafka.serializer.StringEncoder");
         KafkaProducer<String,String> producer=new KafkaProducer<String, String>(props);
-        String topic="streaming1211";
+        String topic="frames611";
         new SendThread(producer,topic).start();
     }
 }
@@ -42,6 +42,7 @@ class SendThread extends Thread{
             String messageStr="messageStr_"+messageNo;
             ProducerRecord<String,String> record=new ProducerRecord<String, String>(topic,messageNo+"",messageStr);
             producer.send(record);
+            System.out.println(messageStr+" sent");
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
